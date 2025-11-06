@@ -1,0 +1,30 @@
+name: Fast Forward Check
+
+on:
+  pull_request:
+    branches: [dev, main]
+
+jobs:
+  check-fast-forward:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch target branch
+        run: git fetch origin ${{ github.event.pull_request.base.ref }}
+
+      - name: Ensure branch is fast-forwardable
+        run: |
+          BASE=${{ github.event.pull_request.base.ref }}
+          TARGET=$(git rev-parse origin/$BASE)
+          MERGE_BASE=$(git merge-base HEAD origin/$BASE)
+
+          if [ "$MERGE_BASE" != "$TARGET" ]; then
+            echo "❌ Branch not rebased on target ($BASE)."
+            echo "➡️ Run: git fetch origin && git rebase origin/$BASE"
+            exit 1
+          fi
+
+          echo "✅ Branch is fast-forwardable."

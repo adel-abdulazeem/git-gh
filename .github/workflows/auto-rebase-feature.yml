@@ -1,0 +1,32 @@
+name: Auto Rebase Feature Branch on dev
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - dev
+
+jobs:
+  rebase:
+    if: startsWith(github.head_ref, 'feature/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+
+      - name: Rebase feature branch onto dev
+        run: |
+          git fetch origin dev
+          git checkout ${{ github.head_ref }}
+          git rebase origin/dev || git rebase --abort
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: auto-rebase feature branch"

@@ -1,0 +1,24 @@
+name: Enforce Fast-Forward Merge Into main
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+jobs:
+  enforce-ff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify PR is fast-forwardable
+        run: |
+          git fetch origin main
+          BASE=$(git merge-base HEAD origin/main)
+          if [ "$BASE" != "$(git rev-parse origin/main)" ]; then
+            echo "❌ This PR cannot be fast-forwarded. Rebase dev on main FIRST."
+            exit 1
+          fi
