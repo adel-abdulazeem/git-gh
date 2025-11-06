@@ -2,6 +2,7 @@ name: promote dev to main
 on:
   push:
     branches:
+      - dev
       - main
 
 permissions:
